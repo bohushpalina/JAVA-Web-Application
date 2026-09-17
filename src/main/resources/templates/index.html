@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Hockey players</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <style>
+        .error-message { color: red; font-size: 0.85em; display: none; margin-left: 8px; }
+        .filter-group { margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+<h1>Хоккеисты</h1>
+
+<form id="filterForm" action="/" method="get">
+    <h3>Фильтры</h3>
+
+    <div class="filter-group">
+        <label>Позиция:</label>
+        <select name="position">
+            <option value="">Все</option>
+            <option value="RW" th:selected="${param.position != null and param.position[0] == 'RW'}">RW</option>
+            <option value="LW" th:selected="${param.position != null and param.position[0] == 'LW'}">LW</option>
+            <option value="C"  th:selected="${param.position != null and param.position[0] == 'C'}">C</option>
+            <option value="D"  th:selected="${param.position != null and param.position[0] == 'D'}">D</option>
+            <option value="G"  th:selected="${param.position != null and param.position[0] == 'G'}">G</option>
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label>Год рождения от:</label>
+        <input type="number" name="birthYearFrom" min="1920" max="2026" th:value="${param.birthYearFrom}">
+        <label>до:</label>
+        <input type="number" name="birthYearTo" min="1920" max="2026" th:value="${param.birthYearTo}">
+        <span class="error-message" id="birthYearError">Некорректный год (1920–2026, «от» ≤ «до»)</span>
+    </div>
+
+    <div class="filter-group">
+        <label>Вес (кг) от:</label>
+        <input type="number" name="weightFrom" min="30" max="200" step="0.1" th:value="${param.weightFrom}">
+        <label>до:</label>
+        <input type="number" name="weightTo" min="30" max="200" step="0.1" th:value="${param.weightTo}">
+        <span class="error-message" id="weightError">Некорректный вес (30–200 кг, «от» ≤ «до»)</span>
+    </div>
+
+    <div class="filter-group">
+        <label>Рост (см) от:</label>
+        <input type="number" name="heightFrom" min="100" max="250" th:value="${param.heightFrom}">
+        <label>до:</label>
+        <input type="number" name="heightTo" min="100" max="250" th:value="${param.heightTo}">
+        <span class="error-message" id="heightError">Некорректный рост (100–250 см, «от» ≤ «до»)</span>
+    </div>
+
+    <button type="submit">Показать</button>
+</form>
+
+<hr>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>Имя</th>
+        <th>Фамилия</th>
+        <th>Позиция</th>
+        <th>Дата рождения</th>
+        <th>Вес</th>
+        <th>Рост</th>
+        <th>Карточка</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="player : ${players}">
+        <td th:text="${player.fname}">Имя</td>
+        <td th:text="${player.sname}">Фамилия</td>
+        <td th:text="${player.position}">Позиция</td>
+        <td th:text="${#temporals.format(player.birthday, 'dd.MM.yy')}">Дата</td>
+        <td th:text="${player.weight}">Вес</td>
+        <td th:text="${player.height}">Рост</td>
+        <td>
+            <a th:href="@{/player/{id}(id=${player.playerid})}">
+                <button type="button">Фото и послужной список</button>
+            </a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const form = document.getElementById("filterForm");
+
+        const groups = [
+            { f: 'birthYearFrom', t: 'birthYearTo', err: 'birthYearError' },
+            { f: 'weightFrom', t: 'weightTo', err: 'weightError' },
+            { f: 'heightFrom', t: 'heightTo', err: 'heightError' }
+        ].map(g => ({
+            from: form.elements[g.f],
+            to: form.elements[g.t],
+            err: document.getElementById(g.err)
+        }));
+
+        function validateGroup({ from, to, err }) {
+            const vFrom = parseFloat(from.value), vTo = parseFloat(to.value);
+            const min = parseFloat(from.min), max = parseFloat(from.max);
+
+            const isInvalid =
+                (vFrom && (vFrom < min || vFrom > max)) ||
+                (vTo && (vTo < min || vTo > max)) ||
+                (vFrom && vTo && vFrom > vTo);
+
+            err.style.display = isInvalid ? "inline" : "none";
+            return !isInvalid;
+        }
+
+        groups.forEach(g => {
+            g.from.addEventListener("input", () => validateGroup(g));
+            g.to.addEventListener("input", () => validateGroup(g));
+        });
+
+        form.addEventListener("submit", (e) => {
+            const isValid = groups.every(validateGroup);
+            if (!isValid) e.preventDefault();
+        });
+    });
+</script>
+</body>
+</html>
