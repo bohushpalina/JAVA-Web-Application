@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+// Настройки генерации: куда положить готовые Java-классы и создавать ли их отдельными файлами
+option java_multiple_files = true;
+option java_package = "com.example.playerservice.grpc";
+
+// 1. Описываем саму службу (наш интерфейс для общения по сети)
+service PlayerService {
+  // Метод: принимает запрос с ID и возвращает список истории
+  rpc GetPlayerHistory (HistoryRequest) returns (HistoryResponse);
+}
+
+// 2. Описываем структуру входящего запроса
+message HistoryRequest {
+  string playerId = 1;
+}
+
+// 3. Описываем модель одной записи истории (как в твоем PlayerHistory)
+message HistoryDto {
+  string playerId = 1;
+  string season = 2;
+  string team = 3;
+}
+
+// 4. Описываем структуру ответа
+message HistoryResponse {
+  // repeated означает, что это будет список (List<HistoryDto>)
+  repeated HistoryDto history = 1;
+}
